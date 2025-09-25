@@ -1,0 +1,306 @@
+# recursion structure #################################################
+
+.data
+
+MIN_PRIN_AMOUNT: .float 0.01
+MAX_PRIN_AMOUNT: .float 100000.99
+MIN_INT_RATE: .float 0.001
+MAX_INT_RATE: .float 1.0
+
+PRIN_AMOUNT: .asciiz "Enter the principal in $ (0.01 - 100,00.99): "
+ANN_INT_RATE: .asciiz "Enter the interest rate (0.001 - 1.0, 0.01 for 1%): "
+TARGET_BALANCE: .asciiz "Enter the target balance: "
+VIEW_YEARS: .asciiz "Enter the number of the last years you would like to see in the balance (-1: all): "
+
+INVALID_INPUT: .asciiz "Invalid number. Try again."
+INVALID_INPUT_02: .asciiz "Invalid number. Try again. Needs to be greater than principle amount."
+
+YEAR_NUMBER: .asciiz "year "
+CUR_PRIN: .asciiz ":\t"
+
+NEW_LINE: .asciiz "\n"
+
+FINISHED_01: .asciiz "the balance at the end of a year"
+FINISHED_02: .asciiz "it takes "
+FINISHED_03: .asciiz " years."
+
+
+.text
+.globl main
+
+main:
+	# setting parameters ##########################################
+
+	li	$t0, 0			# first year no intrest
+	li	$t1, -1			# if -1 is inputed
+
+	# load fraction numbers #######################################
+	la	$a0, MIN_PRIN_AMOUNT	# minimum principal amount
+	lwc1	$f1, ($a0)
+
+	la	$a0, MAX_PRIN_AMOUNT	# maximum principal amount
+	lwc1	$f2, ($a0)
+
+	la	$a0, MIN_INT_RATE	# minimum intrest rate
+	lwc1	$f3, ($a0)
+
+	la	$a0, MAX_INT_RATE	# maximum intrest rate
+	lwc1	$f4, ($a0)
+
+	j Loop_01
+
+
+Loop_01:
+
+	# question 1 ##################################################
+	li	$v0, 4
+	la	$a0, PRIN_AMOUNT
+	syscall
+
+	li	$v0, 6
+	syscall
+
+	mov.s	$f5, $f0
+
+	# valid checking ##############################################
+	c.lt.s	$f5, $f1	# if $f5 < $f1 (0.01)
+	bc1t	Error_01
+
+	c.lt.s	$f2, $f5	# if $f2 (1.0) < $f5
+	bc1t	Error_01
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_02
+
+
+Error_01:
+
+	li	$v0, 4
+	la	$a0, INVALID_INPUT
+	syscall
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_01
+
+
+Loop_02:
+
+	# question 2 ##################################################
+	li	$v0, 4
+	la	$a0, ANN_INT_RATE
+	syscall
+
+	li	$v0, 6
+	syscall
+
+	mov.s	$f6, $f0
+
+	# valid checking ##############################################
+	c.lt.s	$f6, $f3	# if $f6 < $f3 (0.001)
+	bc1t	Error_02
+
+	c.lt.s	$f4, $f6	# if $f4 (1.0) < $f6
+	bc1t	Error_02
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_03
+
+
+Error_02:
+
+	li	$v0, 4
+	la	$a0, INVALID_INPUT
+	syscall
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_02
+
+
+Loop_03:
+
+	# question 3 ##################################################
+	li	$v0, 4
+	la	$a0, TARGET_BALANCE
+	syscall
+
+	li	$v0, 6
+	syscall
+
+	mov.s	$f7, $f0
+
+	# valid checking ##############################################
+	c.lt.s	$f7, $f5	# if input is less than prinicple amount
+	bc1t	Error_03
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_04
+
+
+Error_03:
+
+	li	$v0, 4
+	la	$a0, INVALID_INPUT_02
+	syscall
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_03
+
+
+Loop_04:
+
+	# question 4 ##################################################
+	li	$v0, 4
+	la	$a0, VIEW_YEARS
+	syscall
+
+	li	$v0, 5
+	syscall
+
+	move	$s0, $v0
+
+	blt	$s0, $t1, Error_04	# if input less than (-1)
+
+	j Ending_01
+
+
+Error_04:
+
+	li	$v0, 4
+	la	$a0, INVALID_INPUT
+	syscall
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Loop_04
+
+
+Ending_01:
+
+	li	$v0, 4
+	la	$a0, FINISHED_01
+	syscall
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	j Calculate_years
+
+Calculate_years:
+
+	mul.s	$f8, $f5, $f6
+	add.s	$f5, $f5, $f8
+
+	add	$t0, $t0, 1
+
+	c.lt.s	$f7, $f5
+	bc1f	Calculate_years
+
+	j	Checker
+
+Checker:
+	beq	$s0, $t1, Change
+	j	Print_loop
+
+Change:
+	move	$s0, $t0
+	j	Print_loop
+
+Print_loop:
+	subu	$sp, $sp, 32
+	sw	$ra, ($sp)
+
+	jal Display
+
+	lw	$ra, ($sp)
+	subu	$sp, $sp, -32
+
+	j	Ending_02
+	
+Ending_02:
+	li	$v0, 4
+	la	$a0, FINISHED_02
+	syscall
+
+	li	$v0, 1
+	move	$a0, $t0
+	syscall
+
+	li	$v0, 4
+	la	$a0, FINISHED_03
+	syscall
+
+	jr	$31
+
+
+Display:
+	subu	$sp, $sp, 28
+	sw	$ra, 0($sp)
+
+	sw	$t0, 4($sp)
+	sw	$s0, 8($sp)
+	swc1	$f5, 12($sp)
+	swc1	$f6, 16($sp)
+
+	beqz	$s0, Done
+
+	li	$v0, 4
+	la	$a0, YEAR_NUMBER
+	syscall
+
+	li	$v0, 1
+	move	$a0, $t0
+	syscall
+
+	li	$v0, 4
+	la	$a0, CUR_PRIN
+	syscall
+
+	li	$v0, 2
+	mov.s	$f12, $f5
+	syscall
+
+	li	$v0, 4
+	la	$a0, NEW_LINE
+	syscall
+
+	mul.s	$f8, $f5, $f6
+	sub.s	$f5, $f5, $f8
+
+	sub	$t0, $t0, 1
+	sub	$s0, $s0, 1
+
+	jal	Display
+
+Done:
+	lw	$t0, 4($sp)
+	lw	$s0, 8($sp)
+	lwc1	$f5, 12($sp)
+	lwc1	$f6, 16($sp)
+
+	lw	$ra, 0($sp)
+	subu	$sp, $sp, 28
+
+	jr $ra	
+
+# END OF LINES ########################################################
