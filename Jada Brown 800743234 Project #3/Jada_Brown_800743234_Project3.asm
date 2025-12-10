@@ -1155,16 +1155,168 @@ VMT:
 
 main:
       # obtain the segment table size ----------------------------------------------
+	  lw	$s0, SEG_TABLE_SIZE
      
       # obtain the VMT table size --------------------------------------------------
+	  lw	$s1, VMT_SIZE
      
       # prompt the target segment number -------------------------------------------
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE1
+	  syscall
+
+	  li	$v0, 5
+	  syscall
+	  move	$s2, $v0		# $v0 -> $s2
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
           
       # prompt the target segment offset address -----------------------------------
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE2
+	  syscall
+
+	  li	$v0, 5
+	  syscall
+	  move	$s3, $v0		# $v0 -> $s0
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
           
       # prompt the virtual memory page size ----------------------------------------
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE3
+	  syscall
 
-      # calculate the location in the segment table ---------------------------------       
+	  li	$v0, 5
+	  syscall
+	  move	$s4, $v0
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+
+	  # print before the math -------------------------------------
+	  
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE20
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $s0		# Segment Table Size
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE21
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $s1		# VMT
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE1
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $s2		# Target segment number  
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE2
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $s3		# Target offset	  
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE3
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $s4	  
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_SEPARATOR
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+      # calculate the location in the segment table ---------------------------------
+	  sll	$t0, $s2, 3			# $t0 = segment * offset (2^3 = 8)
+	  la	$t1, SEG_TABLE		# $t1 -> address of SEG_TABLE
+
+	  add	$t0, $t1, $t0		# $t0 = $t1 + $t0 => Targeer segment address
+
+	  lw	$t1, 0($t0)			# Temp segment address
+	  move	$t0, $t1
+	  lw	$t1, 4($t0)			# limit fot target segment
+
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE30
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $t0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE32
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $t1
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
 
       # check the segmentation fault ------------------------------------------------
 
