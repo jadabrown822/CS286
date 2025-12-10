@@ -102,7 +102,7 @@ VMT_SIZE:
 
 .word  1024 # the VMT size (in bytes)
 
-# VMT (Virtual Memory Table ****************************************
+# VMT Virtual Memory Table ****************************************
 #     .word   <Physical Page #>, <Valid Flag>
 
 VMT:
