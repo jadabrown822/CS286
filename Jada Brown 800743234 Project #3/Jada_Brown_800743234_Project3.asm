@@ -1421,7 +1421,7 @@ main:
 
       # find the starting memory address of the target physical memory page ------------
 No_Page_Fault:
-	mult	$t7, $t4, $s4
+	mult	$t4, $s4
 	mflo	$t7
 
 	li	$v0, 4
