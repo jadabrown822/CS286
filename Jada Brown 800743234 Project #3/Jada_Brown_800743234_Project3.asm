@@ -1285,9 +1285,11 @@ main:
 
 	  add	$t0, $t1, $t0		# $t0 = $t1 + $t0 => Targeer segment address
 
-	  lw	$t1, 0($t0)			# Temp segment address
+	  lw	$t1, 0($t0)
+	  lw	$t2, 4($t0)
+
 	  move	$t0, $t1
-	  lw	$t1, 4($t0)			# limit fot target segment
+	  move	$t1, $t2
 
 
 	  li	$v0, 4
@@ -1303,7 +1305,7 @@ main:
 	  syscall
 
 	  li	$v0, 4
-	  la	$a0, STR_MESSAGE32
+	  la	$a0, STR_MESSAGE31
 	  syscall
 
 	  li	$v0, 1
@@ -1313,36 +1315,158 @@ main:
 	  li	$v0, 4
 	  la	$a0, STR_MESSAGE0
 	  syscall
-
-	  	  li	$v0, 4
+	  
+	  li	$v0, 4
 	  la	$a0, STR_MESSAGE0
 	  syscall
 
       # check the segmentation fault ------------------------------------------------
+	  bgt	$s3, $t1, Seg_Fault			# offset > limit -> to fault
 
       # display the segmentation fault error message and terminate ------------------
 
       # if no segmentation fault -----------------------------------------------------
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE5
+	  syscall
 
       # calulate the virtual memory address ------------------------------------------
+	  add	$t2, $t0, $s3		# $t2 = Base + offset
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE32
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $t2
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
 
       # calculate the virtual page number ---------------------------------------------
+	  div	$t3, $t2, $s4
+
+      # calculate the offset address in the virtual memory page ------------------------
+	  mfhi	$t6
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE33
+	  syscall
+
+	  li	$v0, 1
+	  move	$a0, $t3
+	  syscall
+	  
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+	  
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE37
+	  syscall
+	  
+	  li	$v0, 1
+	  move	$a0, $t6
+	  syscall
+	  
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
 
       # calculate the location in the VMT --------------------------------------------
+	  sll	$t4, $t3, 3
+	  la	$t5, VMT
+	  add	$t4, $t5, $t4
+
+	  lw	$t4, 0($t4)
+	  lw	$t5, 4($t4)
+	  
+	  li $v0, 4
+	la $a0, STR_MESSAGE34
+	syscall
+
+	li $v0, 1
+	move $a0, $t4
+	syscall
+
+	li $v0, 4
+	la $a0, STR_MESSAGE0
+	syscall
+
+	li $v0, 4
+	la $a0, STR_MESSAGE35
+	syscall
+
+	li $v0, 1
+	move $a0, $t5
+	syscall
+
+	li $v0, 4
+	la $a0, STR_MESSAGE0
+	syscall
 
       # check the page fault ----------------------------------------------------------
+	  bne	$t5, $zero, No_Page_Fault
 
       # display the page fault message ------------------------------------------------
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE8
+	  syscall
 
       # if no page fault ---------------------------------------------------------------
 
-      # calculate the offset address in the virtual memory page ------------------------
 
       # find the starting memory address of the target physical memory page ------------
+No_Page_Fault:
+	mult	$t7, $t4, $s4
+	mflo	$t7
+
+	li	$v0, 4
+	la	$a0, STR_MESSAGE6
+	syscall
+
+	li	$v0, 1
+	move	$a0, $t7
+	syscall
+
+	li	$v0, 4
+	la	$a0, STR_MESSAGE0
+	syscall
 
       # calculate the final physical memory address ------------------------------------
+	  add	$t8, $t7, $t6
 
-      # display the final result -------------------------------------------------------
+	  # display the final result -------------------------------------------------------
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE11
+	  syscall
 
-      jr $31
-##########################################################################################
+	  li	$v0, 1
+	  move	$a0, $t8
+	  syscall
+
+	  li	$v0, 4
+	  la	$a0, STR_MESSAGE0
+	  syscall
+
+	  j End_Program
+
+
+Seg_Fault:
+	li	$v0, 4
+	la	$a0, STR_MESSAGE4
+	syscall
+
+	j End_Program
+
+
+End_Program:
+	li	$v0, 4
+	la	$a0, STR_MESSAGE12
+	syscall
+	
+	jr $31
+# END OF LINES #########################################################################################
